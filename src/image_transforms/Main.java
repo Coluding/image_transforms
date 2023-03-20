@@ -5,15 +5,19 @@ public class Main {
 	public static void main(String[] args) {
 		// TODO Auto-generated method 
 
-		ResizeArray resize = new ResizeArray(2);
 		
-		double[][] arr = {{100,20}, {300,40}};
+		double[][] arr = {{10,20}, {30,40}};
 		
-		arr = resize.resize2d(arr);
+		arr = ResizeArray.resize2d(arr, 7);
+		
+		System.out.println(arr[1][9]);
 		
 		
-		System.out.println(arr.length);
-		System.out.println(arr[2][3]);
+		
+		//System.out.println(Interpolation.getBilinearValue(arr, 0.6, 0.5 ));
+		
+//		System.out.println(arr.length);
+//		System.out.println(arr[1][2]);
 	}
 
 }

@@ -2,10 +2,11 @@ package image_transforms;
 
 import java.lang.reflect.Array;
 import java.util.Arrays;
+import java.util.stream.Stream;
 public class ResizeArray {
 
     /**
-     * Resizes a 2D double array using bicubic interpolation.
+     * Resizes a 2D double array using bilinear interpolation.
      * 
      * @param arr   the input 2D double array
      * @param scale the scaling factor
@@ -30,41 +31,27 @@ public class ResizeArray {
                 newArr[(int) Math.round(i * scale)][(int) Math.round(j * scale)] = value;
             }
         }
-
-        // Pad the array with zeros
-        newArr = padding2d(newArr, paddingSize);
-
-        // Interpolate the missing values using bicubic interpolation
-        for (int i = paddingSize; i < newH + paddingSize; i++) {
-            for (int j = paddingSize; j < newW + paddingSize; j++) {
-                double value = newArr[i][j];
-
-                // Check if value needs to be interpolated
-                if (value == 0) {
-
-                    // Create 4x4 subarray of neighbors
-                    double[][] neighbors = new double[4][4];
-                    for (int ii = 0; ii < neighbors.length; ii++) {
-                        neighbors[ii] = Arrays.copyOfRange(newArr[ii], j - 2, j + 2);
-                    }
-
-                    // Interpolate the value using bicubic interpolation
-                    double interpolateValue = BicubicInterpolator.getValue(neighbors, i, j);
-                    newArr[i][j] = interpolateValue;
-                }
-            }
-        }
-
-        // Unpad the array
-        double[][] finalArray = new double[newH][newW];
+        
         for (int i = 0; i < newH; i++) {
             for (int j = 0; j < newW; j++) {
-                finalArray[i][j] = newArr[i + paddingSize][j + paddingSize];
+                double value = newArr[i][j];
+                
+                if (value == 0) {
+                	NeighborResult result = find4Neighbors(arr, i, j, (int) scale);
+                	
+                	double interpolatedValue = Interpolation.getBilinearValue(result.getNeighbors(), 
+                			result.getPositions()[0], result.getPositions()[1]);
+                	
+                	newArr[i][j] = interpolatedValue;
+                	                	
+                }
+                
             }
-        }
-
-        return finalArray;
+        }      
+        
+        return newArr;
     }
+    
 
     /**
      * Pads a 2D double array with zeros.
@@ -87,6 +74,47 @@ public class ResizeArray {
 		}
 		
 		return newArr;
+		
+	}
+	
+	public static NeighborResult find4Neighbors(double[][] originalImage, int newX, int newY, int scale) {
+		
+		double oldX = (double)newX / scale;
+		double oldY = (double) newY /scale;
+		double[] positions = {oldX, oldY};
+		
+		System.out.println(oldX);
+		System.out.println(oldY);
+		System.out.println("-------------------");
+		
+		double[][] neighbors = new double[2][2];
+				
+		for (int i = 0; i < 2; i++) {
+			for (int j = 0; j < 2; j++) {
+				System.out.println("oldX lower :");
+				System.out.println((Math.floor(oldX) + i));
+				
+				if ((Math.floor(oldX) + i) > originalImage.length - 1||
+						(Math.floor(oldY) + j) > originalImage[0].length - 1) {
+					System.out.println(".............................");
+					neighbors[i][j] = 0;
+				
+					
+				}else {
+					int x = (int) (Math.floor(oldX) + i);
+					int y = (int) (Math.floor(oldY) + j);
+					neighbors[i][j] = originalImage[y][x]; 
+					System.out.println("original image");
+					System.out.println(originalImage[x][y] );
+				
+				}	
+			}
+		}
+		
+		
+		NeighborResult result = new NeighborResult(positions, neighbors);	
+		return result;	
+		
 		
 	}
 
